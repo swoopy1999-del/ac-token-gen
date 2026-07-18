@@ -55,4 +55,3 @@ web_thread = threading.Thread(target=run_web, daemon=True)
 web_thread.start()
 
 bot.run(TOKEN)
-
