@@ -15,6 +15,14 @@ async def home():
         async with session.get("https://femboys.quest/s") as resp:
             data = await resp.json()
 
+    bearer = data.get("bearer", "N/A")
+    refresh = data.get("refresh", "N/A")
+
+    return {
+        "bearer": bearer,
+        "refresh": refresh
+    }
+
 def run_web():
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
 
@@ -42,13 +50,17 @@ async def token(interaction: discord.Interaction):
         bearer = data.get("bearer", "N/A")
         refresh = data.get("refresh", "N/A")
 
-        dm = await interaction.user.create_dm()
-        await dm.send(
+        msg = (
             f"heres your token lol have fun\n\n"
             f"**Token:**\n```\n{bearer}\n```\n"
             f"**Refresh:**\n```\n{refresh}\n```"
         )
-        await interaction.followup.send("Check DMs", ephemeral=True)
+        try:
+            dm = await interaction.user.create_dm()
+            await dm.send(msg)
+            await interaction.followup.send("Check DMs", ephemeral=True)
+        except discord.Forbidden:
+            await interaction.followup.send(msg, ephemeral=True)
     except Exception as e:
         await interaction.followup.send(f"Error: {e}", ephemeral=True)
 
