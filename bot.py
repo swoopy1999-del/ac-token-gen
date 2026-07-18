@@ -42,11 +42,11 @@ async def token(interaction: discord.Interaction):
 
         dm = await interaction.user.create_dm()
         await dm.send(
-            f"heres your token lol have fun"
+            f"heres your token lol have fun\n\n"
             f"**Token:**\n```\n{bearer}\n```\n"
             f"**Refresh:**\n```\n{refresh}\n```"
         )
-        await interaction.followup.send("Check dms gng", ephemeral=True)
+        await interaction.followup.send("Check DMs", ephemeral=True)
     except Exception as e:
         await interaction.followup.send(f"Error: {e}", ephemeral=True)
 
