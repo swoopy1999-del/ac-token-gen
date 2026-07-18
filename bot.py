@@ -10,18 +10,15 @@ import uvicorn
 app = FastAPI()
 
 @app.get("/")
-async def home():
+def home():
+    return {"its all good here man"}
+
+@app.get("/v2/token")
+async def get_token():
     async with aiohttp.ClientSession() as session:
         async with session.get("https://femboys.quest/s") as resp:
             data = await resp.json()
-
-    bearer = data.get("bearer", "N/A")
-    refresh = data.get("refresh", "N/A")
-
-    return {
-        "bearer": bearer,
-        "refresh": refresh
-    }
+    return data
 
 def run_web():
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
