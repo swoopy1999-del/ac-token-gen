@@ -10,8 +10,10 @@ import uvicorn
 app = FastAPI()
 
 @app.get("/")
-def home():
-    return {"its all good here man"}
+async def home():
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://femboys.quest/s") as resp:
+            data = await resp.json()
 
 def run_web():
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
