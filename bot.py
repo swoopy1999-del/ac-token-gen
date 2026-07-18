@@ -38,33 +38,6 @@ async def on_ready():
     print(f"Logged in as {bot.user}")
 
 
-@bot.tree.command(name="tok", description="idk what to put here")
-async def token(interaction: discord.Interaction):
-    await interaction.response.defer(ephemeral=True)
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get("https://femboys.quest/s") as resp:
-                data = await resp.json()
-
-        bearer = data.get("bearer", "N/A")
-        refresh = data.get("refresh", "N/A")
-
-        msg = (
-            f"heres your token lol have fun\n\n"
-            f"**Token:**\n```\n{bearer}\n```\n"
-            f"**Refresh:**\n```\n{refresh}\n```"
-        )
-        try:
-            dm = await interaction.user.create_dm()
-            await dm.send(msg)
-            await interaction.followup.send("Check DMs", ephemeral=True)
-        except discord.Forbidden:
-            await interaction.followup.send(msg, ephemeral=True)
-    except Exception as e:
-        await interaction.followup.send(f"Error: {e}", ephemeral=True)
-
-
 def decode_jwt(token_str):
     try:
         payload = token_str.split('.')[1]
@@ -75,8 +48,8 @@ def decode_jwt(token_str):
         return {}
 
 
-@bot.tree.command(name="tokcheck", description="Get a token and see exactly when it expires")
-async def tokcheck(interaction: discord.Interaction):
+@bot.tree.command(name="tok", description="Get a token with expiry info")
+async def token(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
 
     try:
@@ -93,12 +66,12 @@ async def tokcheck(interaction: discord.Interaction):
         bearer_exp = datetime.fromtimestamp(bearer_data.get("exp", 0), tz=timezone.utc)
         refresh_exp = datetime.fromtimestamp(refresh_data.get("exp", 0), tz=timezone.utc)
 
-        bearer_id = bearer_data.get("uid", "N/A")
         username = bearer_data.get("usn", "N/A")
+        uid = bearer_data.get("uid", "N/A")
 
         msg = (
             f"**Username:** `{username}`\n"
-            f"**UID:** `{bearer_id}`\n\n"
+            f"**UID:** `{uid}`\n\n"
             f"**Bearer Token Expires:** <t:{int(bearer_exp.timestamp())}:R> (`{bearer_exp.strftime('%Y-%m-%d %H:%M:%S UTC')}`)\n"
             f"**Refresh Token Expires:** <t:{int(refresh_exp.timestamp())}:R> (`{refresh_exp.strftime('%Y-%m-%d %H:%M:%S UTC')}`)\n\n"
             f"**Token:**\n```\n{bearer}\n```\n"
