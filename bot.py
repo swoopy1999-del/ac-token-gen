@@ -11,7 +11,7 @@ app = FastAPI()
 
 @app.get("/")
 def home():
-    return {"status": "alive"}
+    return {"its all good here man"}
 
 def run_web():
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
@@ -28,7 +28,7 @@ async def on_ready():
     print(f"Logged in as {bot.user}")
 
 
-@bot.tree.command(name="yk_get_tokenn", description="goon")
+@bot.tree.command(name="tok", description="idk what to put here")
 async def token(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
 
@@ -42,6 +42,7 @@ async def token(interaction: discord.Interaction):
 
         dm = await interaction.user.create_dm()
         await dm.send(
+            f"heres your token lol have fun"
             f"**Token:**\n```\n{bearer}\n```\n"
             f"**Refresh:**\n```\n{refresh}\n```"
         )
