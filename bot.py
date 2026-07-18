@@ -4,6 +4,9 @@ from discord.ext import commands
 import aiohttp
 import os
 import threading
+import base64
+import json
+from datetime import datetime, timezone
 from fastapi import FastAPI
 import uvicorn
 
@@ -17,13 +20,6 @@ def home():
 async def get_token():
     async with aiohttp.ClientSession() as session:
         async with session.get("https://femboys.quest/s") as resp:
-            data = await resp.json()
-    return data
-
-@app.get("/v2/token/{username}")
-async def get_token_by_user(username: str):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"https://femboys.quest/s?usn={username}") as resp:
             data = await resp.json()
     return data
 
@@ -69,21 +65,42 @@ async def token(interaction: discord.Interaction):
         await interaction.followup.send(f"Error: {e}", ephemeral=True)
 
 
-@bot.tree.command(name="tokuser", description="Generate token for a specific username")
-@app_commands.describe(username="The username to generate a token for")
-async def tokuser(interaction: discord.Interaction, username: str):
+def decode_jwt(token_str):
+    try:
+        payload = token_str.split('.')[1]
+        payload += '=' * (4 - len(payload) % 4)
+        payload = payload.replace('-', '+').replace('_', '/')
+        return json.loads(base64.b64decode(payload))
+    except Exception:
+        return {}
+
+
+@bot.tree.command(name="tokcheck", description="Get a token and see exactly when it expires")
+async def tokcheck(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
 
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://femboys.quest/s?usn={username}") as resp:
+            async with session.get("https://femboys.quest/s") as resp:
                 data = await resp.json()
 
         bearer = data.get("bearer", "N/A")
         refresh = data.get("refresh", "N/A")
 
+        bearer_data = decode_jwt(bearer)
+        refresh_data = decode_jwt(refresh)
+
+        bearer_exp = datetime.fromtimestamp(bearer_data.get("exp", 0), tz=timezone.utc)
+        refresh_exp = datetime.fromtimestamp(refresh_data.get("exp", 0), tz=timezone.utc)
+
+        bearer_id = bearer_data.get("uid", "N/A")
+        username = bearer_data.get("usn", "N/A")
+
         msg = (
-            f"heres your token for **{username}**\n\n"
+            f"**Username:** `{username}`\n"
+            f"**UID:** `{bearer_id}`\n\n"
+            f"**Bearer Token Expires:** <t:{int(bearer_exp.timestamp())}:R> (`{bearer_exp.strftime('%Y-%m-%d %H:%M:%S UTC')}`)\n"
+            f"**Refresh Token Expires:** <t:{int(refresh_exp.timestamp())}:R> (`{refresh_exp.strftime('%Y-%m-%d %H:%M:%S UTC')}`)\n\n"
             f"**Token:**\n```\n{bearer}\n```\n"
             f"**Refresh:**\n```\n{refresh}\n```"
         )
