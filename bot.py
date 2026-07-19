@@ -12,14 +12,19 @@ BASE_URL = "https://animalcompany.us-east1.nakamacloud.io"
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 SERVER_KEY = os.environ.get("SERVER_KEY", "6URuTSlDKKfYbuDW")
 
-token_store = {"token": "", "refresh": ""}
+token_store = {
+    "token": os.environ.get("AC_TOKEN", ""),
+    "refresh": os.environ.get("AC_REFRESH", ""),
+}
 
 def load_tokens():
+    if token_store["token"] and token_store["refresh"]:
+        return
     if os.path.exists("auth.json"):
         with open("auth.json", "r") as f:
             data = json.load(f)
-            token_store["token"] = data.get("token", "")
-            token_store["refresh"] = data.get("refresh", "")
+            token_store["token"] = token_store["token"] or data.get("token", "")
+            token_store["refresh"] = token_store["refresh"] or data.get("refresh", "")
 
 def save_tokens():
     with open("auth.json", "w") as f:
@@ -56,6 +61,10 @@ async def on_ready():
 @tree.command(name="tok", description="Refresh and get your Animal Company token")
 async def tok(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
+    print(f"[tok] user={interaction.user.id}, has_token={bool(token_store['token'])}, has_refresh={bool(token_store['refresh'])}")
+    if not token_store["refresh"]:
+        await interaction.followup.send("No refresh token loaded. Set AC_REFRESH env var or add to auth.json.", ephemeral=True)
+        return
     token, refresh = refresh_token()
     if token:
         try:
